@@ -1,3 +1,12 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/protocol"]
+	path = lib/protocol
+	url = https://github.com/ConicFinance/protocol
+[submodule "lib/beefy-contracts"]
+	path = lib/beefy-contracts
+	url = https://github.com/beefyfinance/beefy-contracts
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
