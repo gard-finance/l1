@@ -28,7 +28,8 @@ contract Pool is ERC20 {
     ) ERC20(_name, _symbol) {
         vault = IVault(_vault);
         asset = _asset;
-        pool = ConicPool(payable(LpToken(address(vault.want())).minter()));
+        // pool = ConicPool(payable(LpToken(address(vault.want())).minter()));
+        pool = ConicPool(payable(address(0)));
     }
 
     function totalAssets() external view returns (uint256 totalManagedAssets) {

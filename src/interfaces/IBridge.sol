@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/interfaces/IERC4626.sol";
-
-interface IBridge is IERC4626 {
+interface IBridge {
     function L2Token() external view returns (uint256 token);
 
-    function bridgeToL2(uint256 amount, uint256 receiver) external;
+    function bridgeToL2(
+        uint256 amount,
+        uint256[] calldata data
+    ) external payable;
 
-    function bridgeFromL2(uint256 amount, address receiver) external;
+    function bridgeFromL2(uint256[] calldata payload) external;
 }
