@@ -3,22 +3,9 @@ pragma solidity ^0.8.2;
 
 import "../interfaces/IBridge.sol";
 import "./Pool.sol";
+import "../interfaces/IStarknetMessaging.sol";
 
 address constant STARKNET_CORE_GOERLI = 0xde29d060D45901Fb19ED6C6e959EB22d8626708e;
-
-interface IStarknet {
-    function sendMessageToL2(
-        uint256 toAddress,
-        uint256 selector,
-        uint256[] calldata payload
-    ) external payable returns (bytes32, uint256);
-
-    function consumeMessageFromL2(
-        uint256 fromAddress,
-        uint256[] calldata payload
-    ) external returns (bytes32);
-}
-
 uint256 constant MINT_SELECTOR = 0x2f0b3c5710379609eb5495f1ecd348cb28167711b73609fe565a72734550354;
 
 /**
@@ -45,7 +32,12 @@ contract Bridge is IBridge {
     ) external payable override {
         assert(data[1] | (data[2] << 128) == amount);
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
-        IStarknet(STARKNET_CORE_GOERLI).sendMessageToL2{value: msg.value}(
+        IStarknet(STARKNET_CORE_GOERLI).sendMessageToL2{value: msg.value / 2}(
+            L2Token,
+            MINT_SELECTOR,
+            data
+        );
+        IStarknet(STARKNET_CORE_GOERLI).sendMessageToL2{value: msg.value / 2}(
             L2Token,
             MINT_SELECTOR,
             data

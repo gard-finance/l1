@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "../src/core/Pool.sol";
-import "../src/core/WrappedPool.sol";
+import "../src/core/Bridge.sol";
 
 address constant CRVUSD = 0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E;
 address constant CRVUSDVAULT = 0x6282FCa35943faBE45d6056F3751b3cf2Bf4504E;
@@ -26,8 +26,7 @@ contract PoolTest is Test {
     function testDepositAndWithdraw() public {
         deal(CRVUSD, address(this), 50_000 ether);
         IERC20(CRVUSD).approve(address(pool), 25_000 ether);
-        uint shares = pool.deposit(25_000 ether, address(this));
-        pool.mint(pool.convertToShares(25_000), address(this));
+        uint shares = pool.deposit(50_000 ether, address(this));
         pool.withdraw(
             pool.convertToAssets(shares / 2),
             address(this),
@@ -56,7 +55,7 @@ contract PoolTest is Test {
         data.push(0);
         console.log(500 ether);
         console.log(data[0], data[1], data[2]);
-        WrappedPool(0x6f25C6e6E1deE26bE07F39e91693718C9AfFd8B6).bridgeToL2{
+        Bridge(0x6f25C6e6E1deE26bE07F39e91693718C9AfFd8B6).bridgeToL2{
             value: 0.0001 ether
         }(500 ether, data);
     }

@@ -28,8 +28,7 @@ contract Pool is ERC20 {
     ) ERC20(_name, _symbol) {
         vault = IVault(_vault);
         asset = _asset;
-        // pool = ConicPool(payable(LpToken(address(vault.want())).minter()));
-        pool = ConicPool(payable(address(0)));
+        pool = ConicPool(payable(LpToken(address(vault.want())).minter()));
     }
 
     function totalAssets() external view returns (uint256 totalManagedAssets) {
@@ -53,11 +52,12 @@ contract Pool is ERC20 {
 
     function deposit(
         uint256 assets,
-        address receiver
+        address receiver,
+        uint256 minLP
     ) external returns (uint256 shares) {
         IERC20(asset).transferFrom(msg.sender, address(this), assets);
         IERC20(asset).approve(address(pool), assets);
-        uint256 cncLPDeposit = pool.deposit(assets, 0, false);
+        uint256 cncLPDeposit = pool.deposit(assets, minLP, false);
         IERC20(vault.want()).approve(address(vault), cncLPDeposit);
         uint256 oldBalance = vault.balanceOf(address(this));
         vault.deposit(cncLPDeposit);
@@ -65,31 +65,12 @@ contract Pool is ERC20 {
         _mint(receiver, shares);
     }
 
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address owner
-    ) external returns (uint256 shares) {
-        require(msg.sender == owner);
-        shares = convertToShares(assets);
-        _burn(owner, shares);
-        uint oldCNCBalance = vault.want().balanceOf(address(this));
-        vault.withdraw(shares);
-        pool.withdraw(
-            vault.want().balanceOf(address(this)) - oldCNCBalance,
-            assets
-        );
-        IERC20(asset).transfer(receiver, assets);
-    }
-
     function redeem(
         uint256 shares,
-        address receiver,
-        address owner
+        address receiver
     ) external returns (uint256 assets) {
-        require(msg.sender == owner);
         assets = convertToAssets(shares);
-        _burn(owner, shares);
+        _burn(msg.sender, shares);
         uint oldCNCBalance = vault.want().balanceOf(address(this));
         vault.withdraw(shares);
         pool.withdraw(
@@ -102,12 +83,6 @@ contract Pool is ERC20 {
     /**
      * INTERNALS
      */
-
-    function _determineMinLPReceived(
-        uint256 assetAmount
-    ) internal view returns (uint256) {
-        return 0;
-    }
 
     function _min(uint256 a, uint256 b) internal pure returns (uint256 min) {
         if (a < b) {
