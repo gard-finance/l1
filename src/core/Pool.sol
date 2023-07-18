@@ -7,6 +7,7 @@ import "@beefy/BIFI/interfaces/beefy/IVault.sol";
 import "@conic/contracts/LpToken.sol";
 import "@conic/contracts/ConicPool.sol";
 import "forge-std/console.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 uint256 constant UNLIMITED = type(uint256).max - 1;
 
@@ -16,6 +17,8 @@ uint256 constant UNLIMITED = type(uint256).max - 1;
  * @notice Pool is a pool that manages a token on Beefy and receives orders from the Starknet core contract on L1.
  */
 contract Pool is ERC20 {
+    using Math for uint256;
+
     IVault public immutable vault;
     address public immutable asset;
     ConicPool public immutable pool;
@@ -39,7 +42,7 @@ contract Pool is ERC20 {
         uint256 assets
     ) public view returns (uint256 shares) {
         uint256 assetPriceinCNCLP = pool.exchangeRate();
-        return (assets * assetPriceinCNCLP) / vault.getPricePerFullShare();
+        return assets.mulDiv(assetPriceinCNCLP, vault.getPricePerFullShare());
     }
 
     function convertToAssets(
@@ -47,7 +50,7 @@ contract Pool is ERC20 {
     ) public view returns (uint256 assets) {
         uint256 valueMoo = vault.getPricePerFullShare() * shares;
         uint256 assetPriceinCNCLP = pool.exchangeRate();
-        return valueMoo / assetPriceinCNCLP;
+        return valueMoo.ceilDiv(assetPriceinCNCLP);
     }
 
     function deposit(

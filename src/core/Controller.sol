@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IStarknetMessaging.sol";
 import "./Pool.sol";
 
@@ -21,6 +22,8 @@ enum Operation {
 }
 
 contract Controller is Ownable {
+    using Math for uint256;
+
     uint256 public L2Pool;
     address public immutable L1Pool;
     address public immutable L1Bridge;
@@ -45,13 +48,13 @@ contract Controller is Ownable {
         uint256 bridgeFee,
         uint256 waveFee,
         uint256 minLP
-    ) external payable onlyOwner {
+    ) external payable onlyOwner returns (uint256 sharePriceInU) {
         // IStarknet(starknet).consumeMessageFromL2(L2Pool, payload);
         uint256 amount = payload[1] | (payload[2] << 128);
         if (uint8(payload[0]) == uint8(Operation.Deposit)) {
             IERC20(Pool(L1Pool).asset()).approve(address(L1Pool), amount);
             uint256 shares = Pool(L1Pool).deposit(amount, address(this), minLP);
-            uint sharePriceInU = (amount * 1e18) / shares;
+            sharePriceInU = amount.mulDiv(1e18, shares);
             uint256[] memory wavePayload = new uint256[](3);
             uint256 low = uint256(uint128(sharePriceInU));
             uint256 high = uint256(uint128(sharePriceInU >> 128));
@@ -65,7 +68,7 @@ contract Controller is Ownable {
         } else {
             Pool(L1Pool).vault().approve(address(L1Pool), amount);
             uint256 assets = Pool(L1Pool).redeem(amount, address(this));
-            uint sharePriceInU = (assets * 1e18) / amount;
+            sharePriceInU = assets.mulDiv(1e18, amount);
             IERC20(Pool(L1Pool).asset()).approve(address(L1Bridge), assets);
             IStarknetTokenBridge(L1Bridge).deposit{value: bridgeFee}(
                 assets,

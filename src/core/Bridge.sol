@@ -29,16 +29,16 @@ contract Bridge is IBridge {
 
     function bridgeToL2(
         uint256 amount,
-        uint256[] calldata data // [recipient, amount.low, amount.high]
+        uint256 recipient
     ) external payable override {
-        assert(data[1] | (data[2] << 128) == amount);
+        uint256[] memory data = new uint256[](3);
+        uint256 low = uint256(uint128(amount));
+        uint256 high = uint256(uint128(amount >> 128));
+        data[0] = recipient;
+        data[1] = low;
+        data[2] = high;
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
-        IStarknet(starknet).sendMessageToL2{value: msg.value / 2}(
-            L2Token,
-            MINT_SELECTOR,
-            data
-        );
-        IStarknet(starknet).sendMessageToL2{value: msg.value / 2}(
+        IStarknet(starknet).sendMessageToL2{value: msg.value}(
             L2Token,
             MINT_SELECTOR,
             data
