@@ -42,7 +42,7 @@ contract WrappedController is Ownable {
         uint256 waveFee,
         uint256 minLP
     ) external payable onlyOwner returns (uint256 sharePriceInU) {
-        // IStarknet(starknet).consumeMessageFromL2(L2Pool, payload);
+        IStarknet(starknet).consumeMessageFromL2(L2Pool, payload);
         uint256 amount = payload[1] | (payload[2] << 128);
         if (uint8(payload[0]) == uint8(Operation.Deposit)) {
             IERC20(Pool(L1Pool).asset()).approve(address(L1Pool), amount);

@@ -2,6 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+script = "script"
 remappings = [
     "@openzeppelin/=lib/openzeppelin-contracts/",
     "@beefy/=lib/beefy-contracts/contracts/",
