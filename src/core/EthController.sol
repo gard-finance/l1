@@ -53,9 +53,11 @@ contract EthController is Ownable {
         uint256 waveFee,
         uint256 minLP
     ) external payable onlyOwner returns (uint256 sharePriceInU) {
+        uint256 feeTokens = gasleft() * tx.gasprice;
         IStarknet(starknet).consumeMessageFromL2(L2Pool, payload);
         uint256 amount = payload[1] | (payload[2] << 128);
         if (uint8(payload[0]) == uint8(Operation.Deposit)) {
+            amount = amount - feeTokens;
             IERC20(Pool(L1Pool).asset()).approve(address(L1Pool), amount);
             uint256 shares = Pool(L1Pool).deposit(amount, address(this), minLP);
             sharePriceInU = amount.mulDiv(1e18, shares);
@@ -71,7 +73,8 @@ contract EthController is Ownable {
             );
         } else {
             Pool(L1Pool).vault().approve(address(L1Pool), amount);
-            uint256 assets = Pool(L1Pool).redeem(amount, address(this));
+            uint256 assets = Pool(L1Pool).redeem(amount, address(this)) -
+                feeTokens;
             sharePriceInU = assets.mulDiv(1e18, amount);
             IWETH(Pool(L1Pool).asset()).withdraw(assets);
             IStarknetTokenBridge(L1Bridge).deposit{value: bridgeFee + assets}(
@@ -89,6 +92,7 @@ contract EthController is Ownable {
                 wavePayload
             );
         }
+        IERC20(Pool(L1Pool).asset()).transfer(msg.sender, feeTokens);
     }
 
     receive() external payable {}
