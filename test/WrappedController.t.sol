@@ -30,10 +30,12 @@ contract ControllerEthTest is Test {
         );
         bridge = new Bridge(CRVUSD, STARKNET);
         bridge.setL2Token(L2CRVUSD);
+        Oracle oracle = new Oracle();
         controller = new WrappedController(
             address(pool),
             address(bridge),
-            STARKNET
+            STARKNET,
+            address(oracle)
         );
         controller.setL2Pool(L2POOL);
     }

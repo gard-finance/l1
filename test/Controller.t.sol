@@ -24,7 +24,13 @@ contract ControllerTest is Test {
             USDCVAULT,
             USDC
         );
-        controller = new Controller(address(pool), STARKGATE, STARKNET);
+        Oracle oracle = new Oracle();
+        controller = new Controller(
+            address(pool),
+            STARKGATE,
+            STARKNET,
+            address(oracle)
+        );
         controller.setL2Pool(L2POOL);
     }
 

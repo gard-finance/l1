@@ -21,10 +21,12 @@ contract DeployScript is Script {
             address(vault),
             MockPool(vault.want()).asset()
         );
+        Oracle oracle = new Oracle();
         WrappedController controller = new WrappedController(
             address(pool),
             address(bridge),
-            0xde29d060D45901Fb19ED6C6e959EB22d8626708e
+            0xde29d060D45901Fb19ED6C6e959EB22d8626708e,
+            address(oracle)
         );
         vm.stopBroadcast();
         console.log("vault", address(vault));
