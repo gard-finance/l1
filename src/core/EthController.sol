@@ -15,12 +15,16 @@ interface IStarknetTokenBridge {
     function withdraw(uint256 amount) external;
 }
 
+interface IWETH {
+    function withdraw(uint wad) external;
+}
+
 enum Operation {
     Deposit,
     Withdraw
 }
 
-contract Controller is Ownable {
+contract EthController is Ownable {
     uint256 public L2Pool;
     address public immutable L1Pool;
     address public immutable L1Bridge;
@@ -52,7 +56,7 @@ contract Controller is Ownable {
             IERC20(Pool(L1Pool).asset()).approve(address(L1Pool), amount);
             uint256 shares = Pool(L1Pool).deposit(amount, address(this), minLP);
             uint sharePriceInU = (amount * 1e18) / shares;
-            uint256[] memory wavePayload = new uint256[](3);
+            uint256[] memory wavePayload = new uint256[](2);
             uint256 low = uint256(uint128(sharePriceInU));
             uint256 high = uint256(uint128(sharePriceInU >> 128));
             wavePayload[0] = low;
@@ -66,8 +70,8 @@ contract Controller is Ownable {
             Pool(L1Pool).vault().approve(address(L1Pool), amount);
             uint256 assets = Pool(L1Pool).redeem(amount, address(this));
             uint sharePriceInU = (assets * 1e18) / amount;
-            IERC20(Pool(L1Pool).asset()).approve(address(L1Bridge), assets);
-            IStarknetTokenBridge(L1Bridge).deposit{value: bridgeFee}(
+            IWETH(Pool(L1Pool).asset()).withdraw(assets);
+            IStarknetTokenBridge(L1Bridge).deposit{value: bridgeFee + assets}(
                 assets,
                 L2Pool
             );
@@ -83,4 +87,6 @@ contract Controller is Ownable {
             );
         }
     }
+
+    receive() external payable {}
 }

@@ -5,7 +5,6 @@ import "../interfaces/IBridge.sol";
 import "./Pool.sol";
 import "../interfaces/IStarknetMessaging.sol";
 
-address constant STARKNET_CORE_GOERLI = 0xde29d060D45901Fb19ED6C6e959EB22d8626708e;
 uint256 constant MINT_SELECTOR = 0x2f0b3c5710379609eb5495f1ecd348cb28167711b73609fe565a72734550354;
 
 /**
@@ -15,10 +14,12 @@ uint256 constant MINT_SELECTOR = 0x2f0b3c5710379609eb5495f1ecd348cb28167711b7360
  */
 contract Bridge is IBridge {
     uint256 public L2Token;
+    address public immutable starknet;
     address public immutable asset;
 
-    constructor(address _asset) {
+    constructor(address _asset, address _starknet) {
         asset = _asset;
+        starknet = _starknet;
     }
 
     function setL2Token(uint256 token) external {
@@ -32,12 +33,12 @@ contract Bridge is IBridge {
     ) external payable override {
         assert(data[1] | (data[2] << 128) == amount);
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
-        IStarknet(STARKNET_CORE_GOERLI).sendMessageToL2{value: msg.value / 2}(
+        IStarknet(starknet).sendMessageToL2{value: msg.value / 2}(
             L2Token,
             MINT_SELECTOR,
             data
         );
-        IStarknet(STARKNET_CORE_GOERLI).sendMessageToL2{value: msg.value / 2}(
+        IStarknet(starknet).sendMessageToL2{value: msg.value / 2}(
             L2Token,
             MINT_SELECTOR,
             data
@@ -45,7 +46,7 @@ contract Bridge is IBridge {
     }
 
     function bridgeFromL2(uint256[] calldata payload) external override {
-        IStarknet(STARKNET_CORE_GOERLI).consumeMessageFromL2(L2Token, payload);
+        IStarknet(starknet).consumeMessageFromL2(L2Token, payload);
         address receiver = address(uint160(payload[0]));
         uint256 amount = payload[1] | (payload[2] << 128);
         IERC20(asset).transfer(receiver, amount);
